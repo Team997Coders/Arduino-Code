@@ -71,6 +71,18 @@ void chase(const CRGB& color){
   }
 }
 
+void downChase(const CRGB& color){
+  for (int i = NUM_LEDS; i != 0; --i) {
+    leds[i] = color;
+    fade(leds[previous(i)]);
+    fade(leds[previous(i, 2)]);
+    fade(leds[previous(i, 3)]);
+    leds[previous(i, 4)] = white;
+    FastLED.show();
+    delay(50);
+  }
+}
+
 void fade(const CRGB& color){
 }
 
