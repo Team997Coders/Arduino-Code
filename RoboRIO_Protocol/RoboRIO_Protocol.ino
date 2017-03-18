@@ -2,7 +2,7 @@
 #include <Wire.h>
 
 const int NUM_LEDS = 10;
-const int DATA_PIN = 0;
+const int DATA_PIN = 84;
 const int adjust = 32;
 
 CRGB leds[NUM_LEDS];
