@@ -1,12 +1,12 @@
 #include <FastLED.h>
 
-const int NUM_LEDS = 10;
+const int NUM_LEDS = 61;
 const int DATA_PIN = 3;
-const int BRIGHTNESS = 128;
-#define FRAMES_PER_SECOND 60
+const int CLOCK_PIN = 4;
+const int BRIGHTNESS = 64;
+#define FRAMES_PER_SECOND 30
 bool gReverseDirection = false;
-const int chase_space = 6U
-;
+bool glitterMode = false;
 
 CRGB leds[NUM_LEDS];
 
@@ -16,20 +16,17 @@ const CRGB red(255, 0, 0);
 const CRGB blackout(0, 0, 0);
 const CRGB green(0, 255, 0);
 const CRGB yellow(255, 255, 0);
-  
+
 char function = '0';
 char x = '0';
 char y = '0';
 
 void setup() {
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
+  FastLED.addLeds<APA102, DATA_PIN, CLOCK_PIN, BGR>(leds, NUM_LEDS);
   FastLED.setBrightness( BRIGHTNESS );
   setColor(toColor('K'));
 
   Serial.begin(9600);
-  //while (!Serial) {
-  //  ; // wait for serial port to connect. Needed for native USB port only
-  //}
 }
 
 int previous(int i, int num = 1, int min = 0, int max = NUM_LEDS) {
@@ -74,8 +71,10 @@ void setColor(const CRGB& color){
 
 void addGlitter( fract8 chanceOfGlitter) 
 {
-  if( random8() < chanceOfGlitter) {
-    leds[ random16(NUM_LEDS) ] += CRGB::White;
+  if (glitterMode) {
+    if( random8() < chanceOfGlitter) {
+      leds[ random16(NUM_LEDS) ] += CRGB::White;
+    }
   }
 }
 
@@ -84,21 +83,21 @@ void chase(const CRGB& color){
     for (int i = 0; i <= NUM_LEDS; ++i) {
       leds[i] = color;
       if (i > 0){
-        leds[i-1].nscale8(64);
+        leds[i-1].nscale8(8);
       }
       FastLED.show();
       delay(50);
     }
-    delay(100);
+    delay(50);
   }
 }
 
 void downChase(const CRGB& color){
   while (Serial.available() == 0) {
-  for (int i = NUM_LEDS; i != 0; --i) {
+  for (int i = NUM_LEDS; i >= 0; --i) {
     leds[i] = color;
     if (i < NUM_LEDS) {
-      leds[i+1].nscale8(64);
+      leds[i+1].nscale8(8);
     }
     FastLED.show();
     delay(50);
@@ -108,10 +107,12 @@ void downChase(const CRGB& color){
 }
 
 void fireworks() {
-  Fire2012(); // run simulation frame
+  while (Serial.available() == 0) {
+    Fire2012(); // run simulation frame
   
-  FastLED.show(); // display this frame
-  FastLED.delay(1000 / FRAMES_PER_SECOND);
+    FastLED.show(); // display this frame
+    FastLED.delay(1000 / FRAMES_PER_SECOND);
+  }
 }
 
 // Fire2012 by Mark Kriegsman, July 2012
@@ -200,7 +201,7 @@ void Fire2012()
  *        F = fireworks
  */
 void loop() {
-    function = "";
+    //function = "K";
     
     if (Serial.available() > 0) {
       // get incoming byte:
@@ -218,6 +219,9 @@ void loop() {
         case 'Y':
         case 'K':
           setColor(toColor(function));
+          break;
+        case 'Q':
+          glitterMode = ~glitterMode;
           break;
         case 'U':
           setColor(toColor('K'));
